@@ -428,78 +428,82 @@ function atualizarValorPorChave(vetor, chave, valor) {
     }
 }
 
-function calcularTendenciaAltaEma9(velas, priceTolerance) {
-    for (let i = 2; i < velas.length; i++) {
-        const velaAtual = velas[i];
-        const velaAnterior = velas[i - 1];
-        const velaAntesDaAnterior = velas[i - 2];
+function tendencia_alta_ema9(velas, margem) {
+    const quantidadeDeVelas = velas.length;
 
-        // Verifica se o preço está acima da EMA9 na vela anterior com tolerância
-        const acimaDaEma9Anterior = velaAnterior.close > velaAnterior.ema9 * (1 - priceTolerance / 100);
+    const ultimaVela = velas[quantidadeDeVelas - 1];
+    const segundaVela = velas[quantidadeDeVelas - 2];
+    const primeiraVela = velas[quantidadeDeVelas - 3];
 
-        // Verifica se o preço tocou na EMA9 na vela atual fora da faixa de tolerância
-        const tocouNaEma9Atual = velaAtual.close > velaAtual.ema9 * (1 + priceTolerance / 100);
-
-        // Verifica se o preço está acima da EMA9 na vela seguinte com tolerância
-        const acimaDaEma9Seguinte = velas[i + 1] && velas[i + 1].close > velas[i + 1].ema9 * (1 - priceTolerance / 100);
-
-        // Define o indicador tendencia_alta_ema9
-        velaAtual.tendencia_alta_ema9 = acimaDaEma9Anterior && tocouNaEma9Atual && acimaDaEma9Seguinte;
+    if (
+        primeiraVela.close > primeiraVela.ema9 &&
+        segundaVela.close <= segundaVela.ema9 + margem &&
+        segundaVela.close >= segundaVela.ema9 - margem &&
+        ultimaVela.close > ultimaVela.ema9
+    ) {
+        return true;
     }
 
-    // As duas últimas velas não têm uma vela seguinte suficiente, então removemos o indicador
-    velas[velas.length - 1].tendencia_alta_ema9 = undefined;
-    velas[velas.length - 2].tendencia_alta_ema9 = undefined;
-
-    // Calcula o indicador para as duas últimas velas
-    if (velas.length >= 2) {
-        const penultimaVela = velas[velas.length - 2];
-        const ultimaVela = velas[velas.length - 1];
-
-        const acimaDaEma9Penultima = penultimaVela.close > penultimaVela.ema9 * (1 - priceTolerance / 100);
-        const tocouNaEma9Ultima = ultimaVela.close > ultimaVela.ema9 * (1 + priceTolerance / 100);
-
-        ultimaVela.tendencia_alta_ema9 = acimaDaEma9Penultima && tocouNaEma9Ultima;
-    }
-
-    return velas;
+    return false;
 }
 
-function calcularTendenciaAltaEma21(velas, priceTolerance) {
-    for (let i = 2; i < velas.length; i++) {
-        const velaAtual = velas[i];
-        const velaAnterior = velas[i - 1];
-        const velaAntesDaAnterior = velas[i - 2];
+function tendencia_alta_ema21(velas, margem) {
+    const quantidadeDeVelas = velas.length;
 
-        // Verifica se o preço está acima da EMA21 na vela anterior com tolerância
-        const acimaDaEma21Anterior = velaAnterior.close > velaAnterior.ema21 * (1 - priceTolerance / 100);
-
-        // Verifica se o preço tocou na EMA21 na vela atual fora da faixa de tolerância
-        const tocouNaEma21Atual = velaAtual.close > velaAtual.ema21 * (1 + priceTolerance / 100);
-
-        // Verifica se o preço está acima da EMA21 na vela seguinte com tolerância
-        const acimaDaEma21Seguinte = velas[i + 1] && velas[i + 1].close > velas[i + 1].ema21 * (1 - priceTolerance / 100);
-
-        // Define o indicador tendencia_alta_ema21
-        velaAtual.tendencia_alta_ema21 = acimaDaEma21Anterior && tocouNaEma21Atual && acimaDaEma21Seguinte;
+    if (quantidadeDeVelas < 3) {
+        console.error("A função requer pelo menos 3 velas para análise.");
+        return false;
     }
 
-    // As duas últimas velas não têm uma vela seguinte suficiente, então removemos o indicador
-    velas[velas.length - 1].tendencia_alta_ema21 = undefined;
-    velas[velas.length - 2].tendencia_alta_ema21 = undefined;
+    const ultimaVela = velas[quantidadeDeVelas - 1];
+    const segundaVela = velas[quantidadeDeVelas - 2];
+    const primeiraVela = velas[quantidadeDeVelas - 3];
 
-    // Calcula o indicador para as duas últimas velas
-    if (velas.length >= 2) {
-        const penultimaVela = velas[velas.length - 2];
-        const ultimaVela = velas[velas.length - 1];
-
-        const acimaDaEma21Penultima = penultimaVela.close > penultimaVela.ema21 * (1 - priceTolerance / 100);
-        const tocouNaEma21Ultima = ultimaVela.close > ultimaVela.ema21 * (1 + priceTolerance / 100);
-
-        ultimaVela.tendencia_alta_ema21 = acimaDaEma21Penultima && tocouNaEma21Ultima;
+    if (
+        primeiraVela.close > primeiraVela.ema21 &&
+        segundaVela.close <= segundaVela.ema21 + margem &&
+        segundaVela.close >= segundaVela.ema21 - margem &&
+        ultimaVela.close > ultimaVela.ema21
+    ) {
+        return true;
     }
 
-    return velas;
+    return false;
+}
+
+async function sendTelegramMsg(TELEGRAM_BOT_TOKEN, MSG, chat_id) {
+    const axios = require('axios');
+    try {
+        const resposta = await axios.post(
+            `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+            {
+                chat_id: chat_id,
+                text: MSG
+            }
+        );
+        console.log(resposta.data);
+    } catch (erro) {
+        console.error(erro);
+    }
+}
+
+async function sendTelegramMsgAnyIds(TELEGRAM_BOT_TOKEN, MSG, chat_ids) {
+    const axios = require('axios');
+    const ids = chat_ids.split(';');
+    for (const chat_id of ids) {
+        try {
+            const resposta = await axios.post(
+                `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+                {
+                    chat_id: chat_id,
+                    text: MSG
+                }
+            );
+            console.log(resposta.data);
+        } catch (erro) {
+            console.error(erro);
+        }
+    }
 }
 
 module.exports = {
@@ -517,6 +521,8 @@ module.exports = {
     getPairs,
     obterValorPorChave,
     atualizarValorPorChave,
-    calcularTendenciaAltaEma9,
-    calcularTendenciaAltaEma21
+    tendencia_alta_ema9,
+    tendencia_alta_ema21,
+    sendTelegramMsg,
+    sendTelegramMsgAnyIds
 }

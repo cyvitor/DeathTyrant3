@@ -44,7 +44,21 @@ async function getOneAcc() {
   return resultado[0];
 }
 
+async function getTelegramBotID() {
+  const query = 'SELECT value FROM params_conf WHERE param = "TELEGRAM_BOT_ID"';
+  const resultado = await execQuery(query);
+  return resultado[0]["value"];
+}
+
+async function getTelegramChatsIDS() {
+  const query = 'SELECT value FROM params_conf WHERE param = "TELEGRAM_CHATS_IDS"';
+  const resultado = await execQuery(query);
+  return resultado[0]["value"];
+}
+
 module.exports = {
   getMonit,
-  getOneAcc
+  getOneAcc,
+  getTelegramBotID,
+  getTelegramChatsIDS
 };
