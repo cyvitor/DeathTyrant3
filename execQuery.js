@@ -56,9 +56,44 @@ async function getTelegramChatsIDS() {
   return resultado[0]["value"];
 }
 
+async function getDtOpers() {
+  const query = 'SELECT * FROM dt_opers WHERE status > 0';
+  const resultado = await execQuery(query);
+  return resultado;
+}
+
+async function getDtOper(dt_minit_id) {
+  const query = `SELECT * FROM dt_opers WHERE dt_monit_id = "${dt_minit_id}" AND status = 1 `;
+  const resultado = await execQuery(query);
+  return resultado;
+}
+
+async function checkDtOper(dt_minit_id) {
+  const query = `SELECT * FROM dt_opers WHERE dt_monit_id = "${dt_minit_id}" AND status = 1 `;
+  const resultado = await execQuery(query);
+  return resultado.length > 0;
+}
+
+async function getDtOperByOperID(operID) {
+  const query = `SELECT * FROM dt_opers WHERE oper_id = "${operID}"`;
+  const resultado = await execQuery(query);
+  return resultado;
+}
+
+async function setDtOper(oper_id, dt_monit_id) {
+  const query = `INSERT INTO dt_opers (oper_id, dt_monit_id, status, datatime)VALUE("${oper_id}", "${dt_monit_id}", 1, now())`;
+  const resultado = await execQuery(query);
+  return resultado;
+}
+
 module.exports = {
   getMonit,
   getOneAcc,
   getTelegramBotID,
-  getTelegramChatsIDS
+  getTelegramChatsIDS,
+  getDtOpers,
+  getDtOper,
+  setDtOper,
+  getDtOperByOperID,
+  checkDtOper
 };

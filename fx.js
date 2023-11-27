@@ -1,6 +1,5 @@
 const tulind = require('tulind');
 const moment = require('moment-timezone');
-const { getRecCoins, getAllowedQuote } = require('./execQuery');
 moment.locale('pt-br');
 moment.tz.setDefault('America/Sao_Paulo');
 
@@ -506,6 +505,27 @@ async function sendTelegramMsgAnyIds(TELEGRAM_BOT_TOKEN, MSG, chat_ids) {
     }
 }
 
+async function getNewOperID() {
+    const {  getDtOperByOperID } = require("./execQuery");
+    const crypto = require('crypto');
+    const { promisify } = require('util');
+    const randomBytesAsync = promisify(crypto.randomBytes);
+    let HID, c;
+    const prefix = 'DT';
+
+    do {
+        HID = prefix + (await randomBytesAsync(4)).toString('hex').toUpperCase().substring(4, 12);
+        if (!isNaN(HID.substring(2))) {
+            const result = await getDtOperByOperID(HID);
+            c = result.length;
+        } else {
+            c = true;
+        }
+    } while (c);
+
+    return HID;
+}
+
 module.exports = {
     getFortunaIndicatorFromCandlesticks,
     getLastFortunaCandle,
@@ -524,5 +544,6 @@ module.exports = {
     tendencia_alta_ema9,
     tendencia_alta_ema21,
     sendTelegramMsg,
-    sendTelegramMsgAnyIds
+    sendTelegramMsgAnyIds,
+    getNewOperID
 }
