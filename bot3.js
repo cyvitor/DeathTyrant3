@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { getPrices, getCandlesticks } = require('./binance');
-const { getMonit, getOneAcc, getTelegramBotID, getTelegramChatsIDS } = require('./execQuery');
-const { sendTelegramMsgAnyIds, getIndicatorsFromCandlesticks, tendencia_alta_ema9, tendencia_alta_ema21, obterValorPorChave, atualizarValorPorChave } = require('./fx');
+const { getMonit, getOneAcc, getTelegramBotID, getTelegramChatsIDS, checkDtOper, setDtOper } = require('./execQuery');
+const { sendTelegramMsgAnyIds, getIndicatorsFromCandlesticks, tendencia_alta_ema9, tendencia_alta_ema21, obterValorPorChave, atualizarValorPorChave, getNewOperID } = require('./fx');
 const { escreveLog } = require('./log');
 const cron = require('node-cron');
 const log_file = process.env.LOG;
@@ -21,18 +21,32 @@ async function check3() {
         const chave1 = e.symbol + "_" + e.timeframe;
         if (istendencia_alta_ema21 != obterValorPorChave(istendencia_alta_ema21V, chave1)) {
             if (istendencia_alta_ema21) {
-                atualizarValorPorChave(istendencia_alta_ema21V, chave1, istendencia_alta_ema21);
-                escreveLog(`${chave1} - ${istendencia_alta_ema21}`, log_file);
-                sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 21`, await getTelegramChatsIDS());
+                if (await checkDtOper(e.id)) {
+                    escreveLog(`MID: ${e.id} - oper ja em andamento`, log_file);
+                } else {
+                    escreveLog(`MID: ${e.id} - iniciar operação`, log_file);
+                    atualizarValorPorChave(istendencia_alta_ema21V, chave1, istendencia_alta_ema21);
+                    //escreveLog(`${chave1} - ${istendencia_alta_ema21}`, log_file);
+                    sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 21`, await getTelegramChatsIDS());
+                    const operID = await getNewOperID();
+                    await setDtOper(operID, e.id);
+                }
             } else {
                 atualizarValorPorChave(istendencia_alta_ema21V, chave1, istendencia_alta_ema21);
             }
         }
         if (istendencia_alta_ema9 != obterValorPorChave(istendencia_alta_ema9V, chave1)) {
             if (istendencia_alta_ema9) {
-                atualizarValorPorChave(istendencia_alta_ema9V, chave1, istendencia_alta_ema9);
-                escreveLog(`${chave1} - ${istendencia_alta_ema9}`, log_file);
-                sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 9`, await getTelegramChatsIDS());
+                if (await checkDtOper(e.id)) {
+                    escreveLog(`MID: ${e.id} - oper ja em andamento`, log_file);
+                } else {
+                    escreveLog(`MID: ${e.id} - iniciar operação`, log_file);
+                    atualizarValorPorChave(istendencia_alta_ema9V, chave1, istendencia_alta_ema9);
+                    //escreveLog(`${chave1} - ${istendencia_alta_ema9}`, log_file);
+                    sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 9`, await getTelegramChatsIDS());
+                    const operID = await getNewOperID();
+                    await setDtOper(operID, e.id);
+                }
             } else {
                 atualizarValorPorChave(istendencia_alta_ema9V, chave1, istendencia_alta_ema9);
             }
