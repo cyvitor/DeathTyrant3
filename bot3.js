@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { getPrices, getCandlesticks } = require('./binance');
-const { getMonit, getOneAcc, getTelegramBotID, getTelegramChatsIDS, checkDtOper, setDtOper } = require('./execQuery');
-const { sendTelegramMsgAnyIds, getIndicatorsFromCandlesticks, tendencia_alta_ema9, tendencia_alta_ema21, obterValorPorChave, atualizarValorPorChave, getNewOperID } = require('./fx');
+const { getMonit, getOneAcc, getTelegramBotID, getTelegramChatsIDS, checkDtOper, setDtOper, setLittleBotOper, checkDtOperAndOrders, setDtOperClosed } = require('./execQuery');
+const { sendTelegramMsgAnyIds, getIndicatorsFromCandlesticks, tendencia_alta_ema9, tendencia_alta_ema21, obterValorPorChave, atualizarValorPorChave, getNewOperID, getLastCandle, calcPercentage } = require('./fx');
 const { escreveLog } = require('./log');
 const cron = require('node-cron');
 const log_file = process.env.LOG;
@@ -16,6 +16,7 @@ async function check3() {
         escreveLog(`Check: ${e.symbol}, ${e.timeframe}, ${e.priceTolerance}`, log_file);
         const candlesticks = await getCandlesticks(acc.apiKey, acc.apiSecret, e.symbol, e.timeframe);
         const candlesticks1 = await getIndicatorsFromCandlesticks(candlesticks);
+        const lastCandle = getLastCandle(candlesticks1);
         const istendencia_alta_ema9 = tendencia_alta_ema9(candlesticks1, e.priceTolerance);
         const istendencia_alta_ema21 = tendencia_alta_ema21(candlesticks1, e.priceTolerance);
         const chave1 = e.symbol + "_" + e.timeframe;
@@ -24,12 +25,13 @@ async function check3() {
                 if (await checkDtOper(e.id)) {
                     escreveLog(`MID: ${e.id} - oper ja em andamento`, log_file);
                 } else {
-                    escreveLog(`MID: ${e.id} - iniciar operação`, log_file);
-                    atualizarValorPorChave(istendencia_alta_ema21V, chave1, istendencia_alta_ema21);
-                    //escreveLog(`${chave1} - ${istendencia_alta_ema21}`, log_file);
-                    sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 21`, await getTelegramChatsIDS());
                     const operID = await getNewOperID();
+                    escreveLog(`MID: ${e.id} operID: ${operID} - iniciar operação`, log_file);
+                    atualizarValorPorChave(istendencia_alta_ema21V, chave1, istendencia_alta_ema21);
+                    sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 21`, await getTelegramChatsIDS());
                     await setDtOper(operID, e.id);
+                    const target = calcPercentage(lastCandle.close, e.targetPercent, 2);
+                    await setLittleBotOper(operID, e.symbol, e.leverage, e.quantity, target);
                 }
             } else {
                 atualizarValorPorChave(istendencia_alta_ema21V, chave1, istendencia_alta_ema21);
@@ -40,16 +42,27 @@ async function check3() {
                 if (await checkDtOper(e.id)) {
                     escreveLog(`MID: ${e.id} - oper ja em andamento`, log_file);
                 } else {
-                    escreveLog(`MID: ${e.id} - iniciar operação`, log_file);
-                    atualizarValorPorChave(istendencia_alta_ema9V, chave1, istendencia_alta_ema9);
-                    //escreveLog(`${chave1} - ${istendencia_alta_ema9}`, log_file);
-                    sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 9`, await getTelegramChatsIDS());
                     const operID = await getNewOperID();
+                    escreveLog(`MID: ${e.id} operID: ${operID} - iniciar operação`, log_file);
+                    atualizarValorPorChave(istendencia_alta_ema9V, chave1, istendencia_alta_ema9);
+                    sendTelegramMsgAnyIds(await getTelegramBotID(), `${e.symbol} ${e.timeframe} Tentendecia de alta EMA 9`, await getTelegramChatsIDS());
                     await setDtOper(operID, e.id);
+                    const target = calcPercentage(lastCandle.close, e.targetPercent, 2);
+                    await setLittleBotOper(operID, e.symbol, e.leverage, e.quantity, target);
                 }
             } else {
                 atualizarValorPorChave(istendencia_alta_ema9V, chave1, istendencia_alta_ema9);
             }
+        }
+    });
+}
+
+async function check4() {
+    const opers = await checkDtOperAndOrders();
+    opers.forEach(async operation => {
+        if (operation.o_status === '3') {
+            escreveLog(`Fecha operação ${operation.oper_id}`, log_file);
+            await setDtOperClosed(operation.oper_id);
         }
     });
 }
@@ -62,4 +75,8 @@ cron.schedule('* * * * *', () => {
     console.log('Executando check() 1 minutos');
     escreveLog(`DeathTyrant3 1-1M`, log_file);
     check3();
+    check4();
 });
+
+//check3();
+//check4();

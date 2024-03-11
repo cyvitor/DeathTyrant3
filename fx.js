@@ -526,6 +526,28 @@ async function getNewOperID() {
     return HID;
 }
 
+function getLastCandle(candles) {
+    // Verifica se o array de candles não está vazio
+    if (candles && candles.length > 0) {
+        // Retorna o último elemento do array
+        return candles[candles.length - 1];
+    } else {
+        // Retorna null se o array estiver vazio
+        return null;
+    }
+}
+
+function calcPercentage(value, percentage, decimalPlaces) {
+    // Calcula o valor da porcentagem
+    const percentageValue = value * (percentage / 100);
+    
+    // Adiciona ou subtrai a porcentagem do valor original
+    const adjustedValue = value + percentageValue;
+    
+    // Retorna o valor ajustado, arredondado para o número especificado de casas decimais
+    return +adjustedValue.toFixed(decimalPlaces);
+}
+
 module.exports = {
     getFortunaIndicatorFromCandlesticks,
     getLastFortunaCandle,
@@ -545,5 +567,7 @@ module.exports = {
     tendencia_alta_ema21,
     sendTelegramMsg,
     sendTelegramMsgAnyIds,
-    getNewOperID
+    getNewOperID,
+    getLastCandle,
+    calcPercentage
 }

@@ -86,6 +86,24 @@ async function setDtOper(oper_id, dt_monit_id) {
   return resultado;
 }
 
+async function setLittleBotOper(oper_id, symbol, leverage, quantity, target) {
+  const query = `INSERT INTO ordens ( symbol, side, type, quantity, price, target1, stopLoss, startOp, startPrice, leverage, status, datahora, oper_id) VALUES ('${symbol}', 'BUY', 'MARKET', '${quantity}', '0', '${target}', '0', '<', '0', '${leverage}', '4', now(), '${oper_id}');`;
+  const resultado = await execQuery(query);
+  return resultado;
+}
+
+async function checkDtOperAndOrders() {
+  const query = `SELECT d.id, d.oper_id, d.dt_monit_id, d.status as dt_status, o.status as o_status FROM dt_opers d, ordens o WHERE d.oper_id=o.oper_id AND d.status != 0`;
+  const resultado = await execQuery(query);
+  return resultado;
+}
+
+async function setDtOperClosed(oper_id) {
+  const query = `UPDATE dt_opers SET status = 0 WHERE oper_id = '${oper_id}'`;
+  const resultado = await execQuery(query);
+  return resultado;
+}
+
 module.exports = {
   getMonit,
   getOneAcc,
@@ -95,5 +113,8 @@ module.exports = {
   getDtOper,
   setDtOper,
   getDtOperByOperID,
-  checkDtOper
+  checkDtOper,
+  setLittleBotOper,
+  checkDtOperAndOrders,
+  setDtOperClosed
 };
