@@ -427,17 +427,20 @@ function atualizarValorPorChave(vetor, chave, valor) {
     }
 }
 
-function tendencia_alta_ema9(velas, margem) {
+function tendencia_alta_ema9(velas, margemPercentual) {
     const quantidadeDeVelas = velas.length;
 
     const ultimaVela = velas[quantidadeDeVelas - 1];
     const segundaVela = velas[quantidadeDeVelas - 2];
     const primeiraVela = velas[quantidadeDeVelas - 3];
 
+    // Converte a margem de porcentagem em um multiplicador
+    const margem = margemPercentual / 100;
+
     if (
         primeiraVela.close > primeiraVela.ema9 &&
-        segundaVela.close <= segundaVela.ema9 + margem &&
-        segundaVela.close >= segundaVela.ema9 - margem &&
+        segundaVela.close <= segundaVela.ema9 * (1 + margem) &&
+        segundaVela.close >= segundaVela.ema9 * (1 - margem) &&
         ultimaVela.close > ultimaVela.ema9
     ) {
         return true;
@@ -446,7 +449,7 @@ function tendencia_alta_ema9(velas, margem) {
     return false;
 }
 
-function tendencia_alta_ema21(velas, margem) {
+function tendencia_alta_ema21(velas, margemPercentual) {
     const quantidadeDeVelas = velas.length;
 
     if (quantidadeDeVelas < 3) {
@@ -458,10 +461,13 @@ function tendencia_alta_ema21(velas, margem) {
     const segundaVela = velas[quantidadeDeVelas - 2];
     const primeiraVela = velas[quantidadeDeVelas - 3];
 
+    // Converte a margem de porcentagem em um multiplicador
+    const margem = margemPercentual / 100;
+
     if (
         primeiraVela.close > primeiraVela.ema21 &&
-        segundaVela.close <= segundaVela.ema21 + margem &&
-        segundaVela.close >= segundaVela.ema21 - margem &&
+        segundaVela.close <= segundaVela.ema21 * (1 + margem) &&
+        segundaVela.close >= segundaVela.ema21 * (1 - margem) &&
         ultimaVela.close > ultimaVela.ema21
     ) {
         return true;
