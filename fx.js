@@ -430,6 +430,11 @@ function atualizarValorPorChave(vetor, chave, valor) {
 function tendencia_alta_ema9(velas, margemPercentual) {
     const quantidadeDeVelas = velas.length;
 
+    if (quantidadeDeVelas < 3) {
+        console.error("A função requer pelo menos 3 velas para análise.");
+        return false;
+    }
+
     const ultimaVela = velas[quantidadeDeVelas - 1];
     const segundaVela = velas[quantidadeDeVelas - 2];
     const primeiraVela = velas[quantidadeDeVelas - 3];
@@ -439,9 +444,9 @@ function tendencia_alta_ema9(velas, margemPercentual) {
 
     if (
         primeiraVela.close > primeiraVela.ema9 &&
-        segundaVela.close <= segundaVela.ema9 * (1 + margem) &&
-        segundaVela.close >= segundaVela.ema9 * (1 - margem) &&
-        ultimaVela.close > ultimaVela.ema9
+        segundaVela.close > segundaVela.ema9 &&
+        ultimaVela.close <= ultimaVela.ema9 * (1 + margem) &&
+        ultimaVela.close >= ultimaVela.ema9 * (1 - margem)
     ) {
         return true;
     }
@@ -466,9 +471,9 @@ function tendencia_alta_ema21(velas, margemPercentual) {
 
     if (
         primeiraVela.close > primeiraVela.ema21 &&
-        segundaVela.close <= segundaVela.ema21 * (1 + margem) &&
-        segundaVela.close >= segundaVela.ema21 * (1 - margem) &&
-        ultimaVela.close > ultimaVela.ema21
+        segundaVela.close > segundaVela.ema21 &&
+        ultimaVela.close <= ultimaVela.ema21 * (1 + margem) &&
+        ultimaVela.close >= ultimaVela.ema21 * (1 - margem)
     ) {
         return true;
     }
